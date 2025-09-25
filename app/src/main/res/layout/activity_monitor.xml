@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/title_activity_monitor" />
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="Advanced Ranging" />
+        <TextView android:id="@+id/tv_wifi_rtt_status" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Wi-Fi RTT (802.11mc): Supported"/>
+        <TextView android:id="@+id/tv_wifi_rtt_results" style="@style/MonitorTextStyle" android:textSize="14sp" android:maxLines="10" tools:text="AP: SSID, Dist: 5.2m"/>
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nSystem Integrity &amp; Root Status" />
+        <TextView android:id="@+id/tv_kernel_version" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Kernel Version: N/A"/>
+        <TextView android:id="@+id/tv_build_tags" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Build Tags: N/A"/>
+        <TextView android:id="@+id/tv_su_exists" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="SU Binary Found: No"/>
+        <TextView android:id="@+id/tv_root_apps" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Root Apps: None detected"/>
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nDevice &amp; SIM Identifiers" />
+        <TextView android:id="@+id/tv_android_id" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Android ID: N/A"/>
+        <TextView android:id="@+id/tv_advertising_id" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Advertising ID: N/A"/>
+        <TextView android:id="@+id/tv_imei" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="IMEI/MEID: Permission needed"/>
+        <TextView android:id="@+id/tv_imsi" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="IMSI: Permission needed"/>
+        <TextView android:id="@+id/tv_phone_number" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Phone Number: Permission needed"/>
+        <TextView android:id="@+id/tv_wifi_mac" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Wi-Fi MAC: N/A"/>
+        <TextView android:id="@+id/tv_bt_mac" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Bluetooth MAC: N/A"/>
+        <TextView android:id="@+id/tv_serial_number" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Hardware Serial: Permission needed"/>
+        <TextView android:id="@+id/tv_build_fingerprint" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Build Fingerprint: N/A"/>
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nDevice &amp; Network State" />
+        <TextView android:id="@+id/tv_network_info" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Network: Wi-Fi (MyHomeNet)"/>
+        <TextView android:id="@+id/tv_ip_address" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="IP Address: 192.168.1.100"/>
+        <TextView android:id="@+id/tv_power_state" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Power: Charging, Not Idle"/>
+        <TextView android:id="@+id/tv_uptime" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Device Uptime: 0s"/>
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nFused Location (Итог)" />
+        <TextView android:id="@+id/tv_provider" style="@style/MonitorTextStyle" tools:text="Provider: fused"/>
+        <TextView android:id="@+id/tv_latitude" style="@style/MonitorTextStyle" tools:text="Latitude: 0.0"/>
+        <TextView android:id="@+id/tv_longitude" style="@style/MonitorTextStyle" tools:text="Longitude: 0.0"/>
+        <TextView android:id="@+id/tv_altitude" style="@style/MonitorTextStyle" tools:text="Altitude: 0.0 m"/>
+        <TextView android:id="@+id/tv_accuracy" style="@style/MonitorTextStyle" tools:text="Accuracy: 0.0 m"/>
+        <TextView android:id="@+id/tv_speed" style="@style/MonitorTextStyle" tools:text="Speed: 0.0 m/s"/>
+        <TextView android:id="@+id/tv_bearing" style="@style/MonitorTextStyle" tools:text="Bearing: 0.0 degrees"/>
+        <TextView android:id="@+id/tv_time" style="@style/MonitorTextStyle" tools:text="Time: N/A"/>
+        <TextView android:id="@+id/tv_vertical_accuracy" style="@style/MonitorTextStyle" tools:text="Vertical Accuracy: N/A"/>
+        <TextView android:id="@+id/tv_speed_accuracy" style="@style/MonitorTextStyle" tools:text="Speed Accuracy: N/A"/>
+        <TextView android:id="@+id/tv_bearing_accuracy" style="@style/MonitorTextStyle" tools:text="Bearing Accuracy: N/A"/>
+        <TextView android:id="@+id/tv_elapsed_time" style="@style/MonitorTextStyle" tools:text="Elapsed Realtime: 0 ns"/>
+        <TextView android:id="@+id/tv_is_mock" style="@style/MonitorTextStyle" tools:text="Is from Mock Provider: false"/>
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nDevice Sensors" />
+        <TextView android:id="@+id/tv_accelerometer" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Accelerometer (X,Y,Z): 0, 0, 0"/>
+        <TextView android:id="@+id/tv_gyroscope" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Gyroscope (X,Y,Z): 0, 0, 0"/>
+        <TextView android:id="@+id/tv_magnetometer" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Magnetometer (X,Y,Z): 0, 0, 0"/>
+        <TextView android:id="@+id/tv_barometer" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Barometer (Pressure): 0 hPa"/>
+        <TextView android:id="@+id/tv_gravity" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Gravity (X,Y,Z): 0, 0, 0"/>
+        <TextView android:id="@+id/tv_linear_acceleration" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Linear Acceleration (X,Y,Z): 0, 0, 0"/>
+        <TextView android:id="@+id/tv_rotation_vector" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="Rotation Vector (X,Y,Z,cos): 0, 0, 0, 0"/>
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nGNSS (Спутники)" />
+        <TextView android:id="@+id/tv_gnss_status" style="@style/MonitorTextStyle" tools:text="Satellites: 0/0"/>
+        <TextView android:id="@+id/tv_satellites_details" style="@style/MonitorTextStyle" android:textSize="14sp" tools:text="PRN: 1 (G), Snr: 30.0..."/>
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nWi-Fi Networks" />
+        <TextView android:id="@+id/tv_wifi_networks" style="@style/MonitorTextStyle" android:textSize="14sp" android:maxLines="10" tools:text="Scanning..."/>
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nBluetooth Devices" />
+        <TextView android:id="@+id/tv_bluetooth_devices" style="@style/MonitorTextStyle" android:textSize="14sp" android:maxLines="10" tools:text="Scanning..."/>
+
+        <TextView
+            style="@style/MonitorHeaderStyle"
+            android:text="\nCell Tower Info" />
+        <TextView android:id="@+id/tv_cell_info" style="@style/MonitorTextStyle" android:textSize="14sp" android:maxLines="10" tools:text="No data"/>
+
+    </LinearLayout>
+</ScrollView>
