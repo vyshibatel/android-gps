@@ -155,7 +155,7 @@ class ActivityMonitor : AppCompatActivity(), SensorEventListener {
             if (rttManager is WifiRttManager) {
                 wifiRttManager = rttManager
                 rttSupported = packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)
-                binding.tvW ifiRttStatus.text = "Wi-Fi RTT (802.11mc): ${if(rttSupported) "Supported" else "Not Supported on this device"}"
+                binding.tvWifiRttStatus.text = "Wi-Fi RTT (802.11mc): ${if(rttSupported) "Supported" else "Not Supported on this device"}"
             } else {
                 binding.tvWifiRttStatus.text = "Wi-Fi RTT (802.11mc): Service not available"
                 rttSupported = false
