@@ -221,7 +221,7 @@ abstract class BaseMapActivity: AppCompatActivity() {
             setTitle(getString(R.string.add_fav_dialog_title))
             setPositiveButton(getString(R.string.dialog_button_add)) { _, _ ->
                 val s = editText.text.toString()
-                if (hasMarker()){
+                if (!hasMarker()){
                     showToast(getString(R.string.location_not_select))
                 }else{
                     viewModel.storeFavorite(s, lat, lon)

@@ -32,6 +32,7 @@ object LocationHook {
     private const val earth = 6378137.0
     private val settings = Xshare()
     private var mLastUpdated: Long = 0
+    private var mLastSettingsLog: Long = 0 // Track last settings reload log time
     private val ignorePkg = arrayListOf("com.android.location.fused", BuildConfig.APPLICATION_ID)
 
     private val context by lazy { AndroidAppHelper.currentApplication() as Context }
@@ -39,6 +40,10 @@ object LocationHook {
     private fun updateLocation() {
         try {
             mLastUpdated = System.currentTimeMillis()
+
+            // Перезагружаем настройки для получения свежих данных
+            settings.reload
+
             val x = (rand.nextInt(50) - 15).toDouble()
             val y = (rand.nextInt(50) - 15).toDouble()
             val dlat = x / earth
@@ -66,6 +71,13 @@ object LocationHook {
             val dfAccuracy = DecimalFormat("#.###")
             dfAccuracy.roundingMode = RoundingMode.HALF_UP
             accuracy = dfAccuracy.format(dynamicAccuracy).replace(",", ".").toFloat()
+
+            // Логируем текущие настройки для отладки (не чаще раза в 5 секунд)
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - mLastSettingsLog > 5000) {
+                XposedBridge.log("GS: Settings reloaded - lat: ${settings.getLat}, lon: ${settings.getLng}, alt: ${settings.getAltitude}, speed: ${settings.getSpeed}, bearing: ${settings.getBearing}")
+                mLastSettingsLog = currentTime
+            }
 
         } catch (e: Exception) {
             Timber.tag("GPS Setter")
@@ -98,7 +110,9 @@ object LocationHook {
                                 location.time = System.currentTimeMillis() - 300
                                 location.latitude = newlat
                                 location.longitude = newlng
-                                location.altitude = settings.getAltitude.toDouble()
+                                val altitude = settings.getAltitude.toDouble()
+                                location.altitude = altitude
+                                XposedBridge.log("GS: Setting location - lat: ${location.latitude}, lon: ${location.longitude}, alt: $altitude, speed: ${settings.getSpeed}, bearing: ${settings.getBearing}")
                                 location.speed = settings.getSpeed
                                 location.bearing = settings.getBearing
                                 location.accuracy = accuracy
@@ -147,7 +161,9 @@ object LocationHook {
 
                                 location.latitude = newlat
                                 location.longitude = newlng
-                                location.altitude = settings.getAltitude.toDouble()
+                                val altitude = settings.getAltitude.toDouble()
+                                location.altitude = altitude
+                                XposedBridge.log("GS: Setting location - lat: ${location.latitude}, lon: ${location.longitude}, alt: $altitude, speed: ${settings.getSpeed}, bearing: ${settings.getBearing}")
                                 location.speed = settings.getSpeed
                                 location.bearing = settings.getBearing
                                 location.accuracy = accuracy
@@ -180,7 +196,9 @@ object LocationHook {
                                         location.time = System.currentTimeMillis() - 300
                                         location.latitude = newlat
                                         location.longitude = newlng
-                                        location.altitude = settings.getAltitude.toDouble()
+                                        val altitude = settings.getAltitude.toDouble()
+                                        location.altitude = altitude
+                                        XposedBridge.log("GS: Setting location - lat: ${location.latitude}, lon: ${location.longitude}, alt: $altitude, speed: ${settings.getSpeed}, bearing: ${settings.getBearing}")
                                         location.speed = settings.getSpeed
                                         location.bearing = settings.getBearing
                                         location.accuracy = accuracy
@@ -226,7 +244,9 @@ object LocationHook {
 
                                 location.latitude = newlat
                                 location.longitude = newlng
-                                location.altitude = settings.getAltitude.toDouble()
+                                val altitude = settings.getAltitude.toDouble()
+                                location.altitude = altitude
+                                XposedBridge.log("GS: Setting location - lat: ${location.latitude}, lon: ${location.longitude}, alt: $altitude, speed: ${settings.getSpeed}, bearing: ${settings.getBearing}")
                                 location.speed = settings.getSpeed
                                 location.bearing = settings.getBearing
                                 location.accuracy = accuracy
@@ -292,6 +312,20 @@ object LocationHook {
                                 }
                                 if (settings.isStarted && !ignorePkg.contains(lpparam.packageName)) {
                                     param.result = accuracy
+                                }
+                            }
+                        }
+                    )
+                } else if (method.name == "getAltitude") {
+                    XposedBridge.hookMethod(
+                        method,
+                        object : XC_MethodHook() {
+                            override fun beforeHookedMethod(param: MethodHookParam) {
+                                if (System.currentTimeMillis() - mLastUpdated > interval) {
+                                    updateLocation()
+                                }
+                                if (settings.isStarted && !ignorePkg.contains(lpparam.packageName)) {
+                                    param.result = settings.getAltitude.toDouble()
                                 }
                             }
                         }

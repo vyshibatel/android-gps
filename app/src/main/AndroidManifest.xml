@@ -18,6 +18,8 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
         android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
     <application
         android:name=".App"
@@ -56,11 +58,12 @@
 
         <service
             android:name=".utils.MovementService"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDJHl2fdyya0PuEY-LRFUZM71pijfZN6IE" />
+            android:value="AIzaSyDbZfdOZtbsMX8cUjaZ2U3j6-i5MHusDn4" />
         <meta-data
             android:name="com.maplibre.AccessToken"
             android:value="pk.eyJ1IjoiZGVsdGFjaGF0IiwiYSI6ImNqc3c1aWczMzBjejY0M28wZmU0a3cwMzMifQ.ZPTH9dFJaav06RAu4rTYHw" />

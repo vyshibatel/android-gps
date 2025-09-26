@@ -93,6 +93,7 @@ object PrefManager   {
         set(value) = pref.edit().putBoolean(ENABLE_JOYSTICK, value).apply()
 
     fun update(start:Boolean, la: Double, ln: Double, alt: Float = 0.0F, speed: Float = 0.0F, bearing: Float = 0.0F) {
+        println("PrefManager: Updating location - lat: $la, lon: $ln, alt: $alt, start: $start")
         runInBackground {
             val prefEditor = pref.edit()
             prefEditor.putFloat(LATITUDE, la.toFloat())
@@ -102,6 +103,7 @@ object PrefManager   {
             prefEditor.putFloat(SPEED, speed) // Сохраняем скорость
             prefEditor.putFloat(BEARING, bearing) // Сохраняем азимут
             prefEditor.apply()
+            println("PrefManager: Saved to SharedPreferences - alt: $alt")
         }
     }
 

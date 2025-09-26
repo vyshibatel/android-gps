@@ -8,4 +8,9 @@
     -->
     <color name="ic_launcher_background">#CCCCCC</color>
 
+    <!-- Status colors -->
+    <color name="colorSuccess">#4CAF50</color>
+    <color name="colorWarning">#FF9800</color>
+    <color name="colorError">#F44336</color>
+
 </resources>

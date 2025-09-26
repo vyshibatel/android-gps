@@ -29,7 +29,7 @@ interface GoogleDirectionsApi {
 
 class RoutingService {
 
-    private val apiKey = "AIzaSyDbZfdOZtbsMX8cUjaZ2U3j6-i5MHusDn4" // ВАЖНО: Вставьте сюда ваш ключ!
+    private val apiKey = "AIzaSyDbZfdOZtbsMX8cUjaZ2U3j6-i5MHusDn4" // Google Maps API Key
 
     private val api: GoogleDirectionsApi
 
@@ -54,17 +54,63 @@ class RoutingService {
         try {
             val origin = "${start.lat},${start.lon}"
             val destination = "${end.lat},${end.lon}"
+
+            println("RoutingService: API Key used: ${apiKey.take(10)}...")
+            println("RoutingService: Requesting route from $origin to $destination")
+
             val response = api.getDirections(origin, destination, apiKey)
+
+            println("RoutingService: Response status - ${response.routes.size} routes found")
 
             if (response.routes.isNotEmpty()) {
                 val points = response.routes[0].overview_polyline.points
-                return decodePolyline(points)
+                println("RoutingService: Polyline points length: ${points.length}")
+
+                val decodedPoints = decodePolyline(points)
+                println("RoutingService: Decoded ${decodedPoints.size} points")
+
+                // Тест: добавляем точки начала и конца маршрута, если они отсутствуют
+                if (decodedPoints.isNotEmpty()) {
+                    val result = mutableListOf<LatLng>()
+                    val startLatLng = LatLng(start.lat, start.lon)
+                    val endLatLng = LatLng(end.lat, end.lon)
+
+                    // Добавляем точку начала, если она не слишком близка к первой точке маршрута
+                    if (calculateDistance(startLatLng, decodedPoints.first()) > 50) {
+                        result.add(startLatLng)
+                    }
+
+                    result.addAll(decodedPoints)
+
+                    // Добавляем точку конца, если она не слишком близка к последней точке маршрута
+                    if (calculateDistance(endLatLng, decodedPoints.last()) > 50) {
+                        result.add(endLatLng)
+                    }
+
+                    println("RoutingService: Final route has ${result.size} points")
+                    return result
+                }
+
+                return decodedPoints
+            } else {
+                println("RoutingService: No routes found in response")
             }
             return null
         } catch (e: Exception) {
+            println("RoutingService: Error getting route: ${e.message}")
             e.printStackTrace()
             return null
         }
+    }
+
+    private fun calculateDistance(point1: LatLng, point2: LatLng): Float {
+        val results = FloatArray(1)
+        android.location.Location.distanceBetween(
+            point1.latitude, point1.longitude,
+            point2.latitude, point2.longitude,
+            results
+        )
+        return results[0]
     }
 
     private fun decodePolyline(encoded: String): List<LatLng> {
@@ -74,11 +120,14 @@ class RoutingService {
         var lat = 0
         var lng = 0
 
+        println("RoutingService: Decoding polyline of length $len")
+
         while (index < len) {
             var b: Int
             var shift = 0
             var result = 0
             do {
+                if (index >= len) break
                 b = encoded[index++].code - 63
                 result = result or (b and 0x1f shl shift)
                 shift += 5
@@ -89,6 +138,7 @@ class RoutingService {
             shift = 0
             result = 0
             do {
+                if (index >= len) break
                 b = encoded[index++].code - 63
                 result = result or (b and 0x1f shl shift)
                 shift += 5
@@ -99,6 +149,13 @@ class RoutingService {
             val p = LatLng(lat.toDouble() / 1E5, lng.toDouble() / 1E5)
             poly.add(p)
         }
+
+        println("RoutingService: Successfully decoded ${poly.size} points")
+        if (poly.isNotEmpty()) {
+            println("RoutingService: First point: ${poly.first()}")
+            println("RoutingService: Last point: ${poly.last()}")
+        }
+
         return poly
     }
 }

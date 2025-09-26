@@ -266,17 +266,23 @@ class MainViewModel @Inject constructor(
 
     fun fetchAltitude(lat: Double, lon: Double) {
         val locations = "$lat,$lon"
+        println("MainViewModel: Fetching altitude for: $locations")
+
         elevationService.getElevation(locations).enqueue(object : Callback<ElevationResponse> {
             override fun onResponse(call: Call<ElevationResponse>, response: Response<ElevationResponse>) {
                 if (response.isSuccessful) {
-                    val elevation = response.body()?.results?.firstOrNull()?.elevation?.toFloat()
-                    _altitude.postValue(elevation ?: 0.0F)
+                    val elevation = response.body()?.results?.firstOrNull()?.elevation
+                    val elevationFloat = elevation?.toFloat() ?: 0.0F
+                    println("MainViewModel: Elevation API response - raw: $elevation, float: $elevationFloat")
+                    _altitude.postValue(elevationFloat)
                 } else {
+                    println("MainViewModel: Elevation API failed - code: ${response.code()}, message: ${response.message()}")
                     _altitude.postValue(0.0F)
                 }
             }
 
             override fun onFailure(call: Call<ElevationResponse>, t: Throwable) {
+                println("MainViewModel: Elevation API error: ${t.message}")
                 _altitude.postValue(0.0F)
             }
         })
@@ -288,9 +294,17 @@ class MainViewModel @Inject constructor(
 
     fun findRoute(start: RoutePoint, end: RoutePoint) {
         viewModelScope.launch {
-            // routingService возвращает List<LatLng>?
-            val routePoints = routingService.getRoute(start, end)
-            _route.emit(routePoints)
+            try {
+                println("MainViewModel: Finding route from ${start.lat},${start.lon} to ${end.lat},${end.lon}")
+                // routingService возвращает List<LatLng>?
+                val routePoints = routingService.getRoute(start, end)
+                println("MainViewModel: Route result: ${routePoints?.size ?: 0} points")
+                _route.emit(routePoints)
+            } catch (e: Exception) {
+                println("MainViewModel: Error finding route: ${e.message}")
+                e.printStackTrace()
+                _route.emit(null)
+            }
         }
     }
 
