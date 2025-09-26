@@ -12,12 +12,12 @@ import io.github.jqssun.gpssetter.R
 import io.github.jqssun.gpssetter.room.Favorite
 
 class FavListAdapter(
-    ) : ListAdapter<Favorite,FavListAdapter.ViewHolder>(FavListComparetor()) {
+) : ListAdapter<Favorite,FavListAdapter.ViewHolder>(FavListComparetor()) {
 
     var onItemClick : ((Favorite) -> Unit)? = null
     var onItemDelete : ((Favorite) -> Unit)? = null
 
-   inner class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
+    inner class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
 
         private val address: TextView = view.findViewById(R.id.address)
         private val delete: ImageView = itemView.findViewById(R.id.del)
@@ -54,9 +54,6 @@ class FavListAdapter(
         val item = getItem(position)
         if (item != null){
             holder.bind(item)
-
         }
-
     }
-
 }

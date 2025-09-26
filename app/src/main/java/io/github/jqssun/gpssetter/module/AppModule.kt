@@ -8,6 +8,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.github.jqssun.gpssetter.api.ElevationService
+import io.github.jqssun.gpssetter.api.RoutingService
 import io.github.jqssun.gpssetter.module.util.ApplicationScope
 import io.github.jqssun.gpssetter.room.AppDatabase
 import io.github.jqssun.gpssetter.room.FavoriteDao
@@ -17,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -25,9 +28,19 @@ object AppModule{
 
     @Singleton
     @Provides
+    @Named("GitHub")
     fun createGitHubService(): Retrofit =
         Retrofit.Builder()
             .baseUrl("https://api.github.com/repos/jqssun/android-gps-setter/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+    @Singleton
+    @Provides
+    @Named("Elevation")
+    fun createElevationService(): Retrofit =
+        Retrofit.Builder()
+            .baseUrl("https://api.open-elevation.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
@@ -39,8 +52,18 @@ object AppModule{
 
     @Singleton
     @Provides
-    fun provideGithubService(retrofit: Retrofit): GitHubService =
+    fun provideGithubService(@Named("GitHub") retrofit: Retrofit): GitHubService =
         retrofit.create(GitHubService::class.java)
+
+    @Singleton
+    @Provides
+    fun provideElevationService(@Named("Elevation") retrofit: Retrofit): ElevationService =
+        retrofit.create(ElevationService::class.java)
+
+    @Singleton
+    @Provides
+    fun provideRoutingService(): RoutingService =
+        RoutingService()
 
     @Provides
     @Singleton

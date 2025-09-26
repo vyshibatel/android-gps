@@ -54,6 +54,9 @@
             android:name=".utils.JoystickService"
             android:exported="false" />
 
+        <service
+            android:name=".utils.MovementService"
+            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -61,7 +64,6 @@
         <meta-data
             android:name="com.maplibre.AccessToken"
             android:value="pk.eyJ1IjoiZGVsdGFjaGF0IiwiYSI6ImNqc3c1aWczMzBjejY0M28wZmU0a3cwMzMifQ.ZPTH9dFJaav06RAu4rTYHw" />
-
 
         <provider
             android:name="androidx.core.content.FileProvider"

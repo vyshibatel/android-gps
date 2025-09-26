@@ -77,12 +77,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
         ElevationOverlayProvider(this)
     }
 
-    private val headerBackground by lazy {
-        elevationOverlayProvider.compositeOverlayWithThemeSurfaceColorIfNeeded(
-            resources.getDimension(R.dimen.bottom_sheet_elevation)
-        )
-    }
-
     protected abstract fun getActivityInstance(): BaseMapActivity
     protected abstract fun hasMarker(): Boolean
     protected abstract fun initializeMap()
@@ -117,17 +111,7 @@ abstract class BaseMapActivity: AppCompatActivity() {
             binding.toolbar,
             R.string.drawer_open,
             R.string.drawer_close
-        ) {
-            override fun onDrawerClosed(view: View) {
-                super.onDrawerClosed(view)
-                invalidateOptionsMenu()
-            }
-
-            override fun onDrawerOpened(drawerView: View) {
-                super.onDrawerOpened(drawerView)
-                invalidateOptionsMenu()
-            }
-        }
+        ) {}
         binding.container.setDrawerListener(mDrawerToggle)
     }
 
@@ -135,7 +119,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
 
         binding.mapContainer.map.setOnApplyWindowInsetsListener { _, insets ->
             val topInset: Int = insets.systemWindowInsetTop
-            val bottomInset: Int = insets.systemWindowInsetBottom
             binding.navView.setPadding(0,topInset,0,0)
             insets.consumeSystemWindowInsets()
         }
@@ -204,7 +187,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
                 xposedDialog = MaterialAlertDialogBuilder(this).run {
                     setTitle(R.string.error_xposed_module_missing)
                     setMessage(R.string.error_xposed_module_missing_desc)
-                    // setCancelable(BuildConfig.DEBUG)
                     setCancelable(true)
                     show()
                 }
@@ -240,7 +222,7 @@ abstract class BaseMapActivity: AppCompatActivity() {
             setPositiveButton(getString(R.string.dialog_button_add)) { _, _ ->
                 val s = editText.text.toString()
                 if (hasMarker()){
-                  showToast(getString(R.string.location_not_select))
+                    showToast(getString(R.string.location_not_select))
                 }else{
                     viewModel.storeFavorite(s, lat, lon)
                     viewModel.response.observe(getActivityInstance()){
@@ -261,17 +243,14 @@ abstract class BaseMapActivity: AppCompatActivity() {
         val rcv = view.findViewById<RecyclerView>(R.id.favorites_list)
         rcv.layoutManager = LinearLayoutManager(this)
         rcv.adapter = favListAdapter
-        favListAdapter.onItemClick = {
-            it.let {
-                lat = it.lat!!
-                lon = it.lng!!
-            }
+        favListAdapter.onItemClick = { favorite ->
+            lat = favorite.lat!!
+            lon = favorite.lng!!
             moveMapToNewLocation(true)
             if (dialog.isShowing) dialog.dismiss()
-
         }
-        favListAdapter.onItemDelete = {
-            viewModel.deleteFavorite(it)
+        favListAdapter.onItemDelete = { favorite ->
+            viewModel.deleteFavorite(favorite)
         }
         alertDialog.setView(view)
         dialog = alertDialog.create()
@@ -367,15 +346,12 @@ abstract class BaseMapActivity: AppCompatActivity() {
                 trySend(SearchProgress.Complete(matcher.group().split(",")[0].toDouble(),matcher.group().split(",")[1].toDouble()))
             }else {
                 val geocoder = Geocoder(getActivityInstance())
-                val addressList: List<Address>? = geocoder.getFromLocationName(address,3)
-
                 try {
-                    addressList?.let {
-                        if (it.size == 1){
-                           trySend(SearchProgress.Complete(addressList[0].latitude, addressList[0].longitude))
-                        }else {
-                            trySend(SearchProgress.Fail(getString(R.string.address_not_found)))
-                        }
+                    val addressList: List<Address>? = geocoder.getFromLocationName(address,1)
+                    if (addressList != null && addressList.isNotEmpty()){
+                        trySend(SearchProgress.Complete(addressList[0].latitude, addressList[0].longitude))
+                    }else {
+                        trySend(SearchProgress.Fail(getString(R.string.address_not_found)))
                     }
                 } catch (io : IOException){
                     trySend(SearchProgress.Fail(getString(R.string.no_internet)))
@@ -400,7 +376,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
         notificationsChannel.cancelAllNotifications(this)
     }
 
-    // Get current location
     @SuppressLint("MissingPermission")
     protected fun getLastLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -428,24 +403,26 @@ abstract class BaseMapActivity: AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun requestNewLocationData() {
-        val mLocationRequest = LocationRequest()
-        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        mLocationRequest.interval = 0
-        mLocationRequest.fastestInterval = 0
-        mLocationRequest.numUpdates = 1
-
+        val mLocationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 0
+            fastestInterval = 0
+            numUpdates = 1
+        }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         fusedLocationClient.requestLocationUpdates(
             mLocationRequest, mLocationCallback,
-            Looper.myLooper()
+            Looper.myLooper()!!
         )
     }
 
     private val mLocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
-            val mLastLocation: Location = locationResult.lastLocation!!
-            lat = mLastLocation.latitude
-            lon = mLastLocation.longitude
+            val mLastLocation: Location? = locationResult.lastLocation
+            if (mLastLocation != null) {
+                lat = mLastLocation.latitude
+                lon = mLastLocation.longitude
+            }
         }
     }
 
@@ -457,12 +434,8 @@ abstract class BaseMapActivity: AppCompatActivity() {
     }
 
     private fun checkPermissions(): Boolean {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        ) {
-            return true
-        }
-        return false
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPermissions() {
@@ -479,9 +452,10 @@ abstract class BaseMapActivity: AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-            getLastLocation()
+        if (requestCode == PERMISSION_ID) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                getLastLocation()
+            }
         }
     }
 }

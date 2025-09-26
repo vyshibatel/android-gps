@@ -16,10 +16,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jqssun.gpssetter.BuildConfig
 import io.github.jqssun.gpssetter.R
+import io.github.jqssun.gpssetter.api.ElevationResponse
+import io.github.jqssun.gpssetter.api.ElevationService
+import io.github.jqssun.gpssetter.api.RoutePoint
+import io.github.jqssun.gpssetter.api.RoutingService
 import io.github.jqssun.gpssetter.repository.FavoriteRepository
 import io.github.jqssun.gpssetter.room.Favorite
 import io.github.jqssun.gpssetter.update.UpdateChecker
@@ -31,6 +36,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -42,6 +50,8 @@ class MainViewModel @Inject constructor(
     private val prefManger: PrefManager,
     private val checkUpdates: UpdateChecker,
     private val downloadManager: DownloadManager,
+    private val elevationService: ElevationService,
+    private val routingService: RoutingService,
     @ApplicationContext context: Context
 ) : ViewModel() {
 
@@ -49,6 +59,7 @@ class MainViewModel @Inject constructor(
     val getLng  = prefManger.getLng
     val isStarted = prefManger.isStarted
     val mapType = prefManger.mapType
+    val getAltitude = prefManger.getAltitude
 
 
     private val _allFavList = MutableStateFlow<List<Favorite>>(emptyList())
@@ -65,8 +76,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun update(start: Boolean, la: Double, ln: Double)  {
-        prefManger.update(start,la,ln)
+    fun update(start: Boolean, la: Double, ln: Double, alt: Float)  {
+        prefManger.update(start, la, ln, alt)
     }
 
     private val _response = MutableLiveData<Long>()
@@ -81,7 +92,6 @@ class MainViewModel @Inject constructor(
     val isXposed = MutableLiveData<Boolean>(true)
     fun updateXposedState() {
         onMain {
-            // isXposed.value = YukiHookAPI.Status.isModuleActive
             isXposed.value = false
         }
     }
@@ -106,7 +116,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-     val update = _update.asStateFlow()
+    val update = _update.asStateFlow()
 
     fun getAvailableUpdate(): UpdateChecker.Update? {
         return _update.value
@@ -125,7 +135,6 @@ class MainViewModel @Inject constructor(
     val downloadState = _downloadState.asStateFlow()
 
 
-    // Got idea from https://github.com/KieronQuinn/DarQ for Check Update
     fun startDownload(context: Context, update: UpdateChecker.Update) {
         if(_downloadState.value is State.Idle) {
             downloadUpdate(context, update.assetUrl, update.assetName)
@@ -169,7 +178,7 @@ class MainViewModel @Inject constructor(
                         c.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
                     val downloadedIndex: Int =
                         c.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                    val size = c.getInt(sizeIndex)
+                    val size = c.getInt(downloadedIndex)
                     val downloaded = c.getInt(downloadedIndex)
                     if (size != -1) progress = downloaded * 100.0 / size
                 }
@@ -186,7 +195,7 @@ class MainViewModel @Inject constructor(
         context.registerReceiver(
             downloadStateReceiver,
             IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-            Context.RECEIVER_EXPORTED // Просто добавьте этот флаг
+            Context.RECEIVER_EXPORTED
         )
         context.contentResolver.registerContentObserver(Uri.parse("content://downloads/my_downloads"), true, downloadObserver)
         requestId = DownloadManager.Request(Uri.parse(url)).apply {
@@ -233,29 +242,61 @@ class MainViewModel @Inject constructor(
         object Failed: State()
     }
 
-
-
-     fun storeFavorite(
+    fun storeFavorite(
         address: String,
         lat: Double,
         lon: Double
     ) = onIO {
 
-            val slot: Int
-            var i = 0
-            while (true) {
-                if(getFavoriteSingle(i) == null) {
-                    slot = i
-                    break
-                } else {
-                    i++
-                }
+        val slot: Int
+        var i = 0
+        while (true) {
+            if(getFavoriteSingle(i) == null) {
+                slot = i
+                break
+            } else {
+                i++
+            }
         }
-         insertNewFavorite(Favorite(id = slot.toLong(), address = address, lat = lat, lng = lon))
+        insertNewFavorite(Favorite(id = slot.toLong(), address = address, lat = lat, lng = lon))
     }
 
+    private val _altitude = MutableLiveData<Float>()
+    val altitude: LiveData<Float> = _altitude
 
+    fun fetchAltitude(lat: Double, lon: Double) {
+        val locations = "$lat,$lon"
+        elevationService.getElevation(locations).enqueue(object : Callback<ElevationResponse> {
+            override fun onResponse(call: Call<ElevationResponse>, response: Response<ElevationResponse>) {
+                if (response.isSuccessful) {
+                    val elevation = response.body()?.results?.firstOrNull()?.elevation?.toFloat()
+                    _altitude.postValue(elevation ?: 0.0F)
+                } else {
+                    _altitude.postValue(0.0F)
+                }
+            }
 
+            override fun onFailure(call: Call<ElevationResponse>, t: Throwable) {
+                _altitude.postValue(0.0F)
+            }
+        })
+    }
 
+    // Храним маршрут как список LatLng, который нам возвращает Google
+    private val _route = MutableStateFlow<List<LatLng>?>(null)
+    val route = _route.asStateFlow()
 
+    fun findRoute(start: RoutePoint, end: RoutePoint) {
+        viewModelScope.launch {
+            // routingService возвращает List<LatLng>?
+            val routePoints = routingService.getRoute(start, end)
+            _route.emit(routePoints)
+        }
+    }
+
+    fun clearRoute() {
+        viewModelScope.launch {
+            _route.emit(null)
+        }
+    }
 }
